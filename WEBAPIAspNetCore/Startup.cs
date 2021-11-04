@@ -29,10 +29,8 @@ namespace WEBAPIAspNetCore
             services.AddDbContext<HeroContext>(option => {
                 option.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
             });
-            services.AddDbContext<BatalhaContext>(option => {
-                option.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
-            });
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddScoped<IEFCoreRepository, EFCoreRepository>();
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1).AddJsonOptions(opt => opt.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

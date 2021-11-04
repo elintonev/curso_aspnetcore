@@ -15,20 +15,21 @@ namespace WEBAPIAspNetCore.Controllers
     [ApiController]
     public class BatalhaController : ControllerBase
     {
-        private readonly BatalhaContext _context;
-        public BatalhaController(BatalhaContext context)
+        private readonly IEFCoreRepository _repo;
+        public BatalhaController(IEFCoreRepository repository)
         {
-            _context = context;
+            _repo = repository;
         }
 
 
         // GET: api/<BatalhaController>
         [HttpGet]
-        public ActionResult Get()
+        public async Task<IActionResult> Get()
         {
             try
             {
-                return Ok(new Batalha());
+                var herois = await _repo.GetAllBatalhas(true);
+                return Ok(herois);
             }
             catch (Exception e)
             {
@@ -37,53 +38,86 @@ namespace WEBAPIAspNetCore.Controllers
 
         }
 
-        // GET api/<BatalhaController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
+        // GET: api/Batalha/5
+        [HttpGet("{id}", Name = "GeBatalha")]
+        public async Task<IActionResult> Get(int id)
         {
-            return "Value";
+            try
+            {
+                var herois = await _repo.GetBatalhaById(id, true);
+                return Ok(herois);
+            }
+            catch (Exception e)
+            {
+                return BadRequest($"Erro: {e}");
+            }
         }
 
         // POST api/<BatalhaController>
         [HttpPost]
-        public ActionResult Post(Batalha model)
+        public async Task<IActionResult> Post(Batalha model)
         {
             try
             {
-                _context.Batalhas.Add(model);
-                _context.SaveChanges();
-                return Ok("Show de Gol meu guri");
+                _repo.Add(model);
+                if (await _repo.SaveChangesAsync())
+                {
+                    return Ok("Show de Gol meu guri");
+                }
             }
             catch (Exception e)
             {
                 return BadRequest($"Erro: {e}");
             }
+            return BadRequest("Deu ruim!");
         }
 
         // PUT api/<BatalhaController>/5
         [HttpPut("{id}")]
-        public ActionResult Put(int id, Batalha model)
+        public async Task<IActionResult> Put(int id, Batalha model)
         {
             try
             {
-                if (_context.Batalhas.AsNoTracking().FirstOrDefault(h => h.Id == id) != null)
-                {
-                    _context.Batalhas.Update(model);
-                    _context.SaveChanges();
-                    return Ok("Show de Gol meu guri");
+
+                var heroi = await _repo.GetBatalhaById(id);
+                if (heroi != null) {
+                    _repo.Update(model);
+                    if (await _repo.SaveChangesAsync())
+                    {
+                        return Ok("Show de Gol meu guri");
+                    }
                 }
-                return Ok("Não encontrado!");
+
             }
             catch (Exception e)
             {
                 return BadRequest($"Erro: {e}");
             }
+            return BadRequest("Não atualizado!");
         }
 
         // DELETE api/<BatalhaController>/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
+            try
+            {
+                var heroi = await _repo.GetBatalhaById(id);
+                if (heroi != null) {
+                    
+                    _repo.Delete(heroi);
+
+                    if (await _repo.SaveChangesAsync())
+                    {
+                        return Ok("Show de Gol meu guri");
+                    } 
+                }
+            }
+            catch (Exception e)
+            {
+                return BadRequest($"Erro: {e}");
+            }
+            return BadRequest("Não encontrado!");
         }
     }
 }
